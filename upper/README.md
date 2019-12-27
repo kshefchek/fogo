@@ -23,17 +23,18 @@ upper ontology terms in Upheno:
     'UBERON:0002384PHENOTYPE': 'Connective tissue',
     'UBERON:0000323PHENOTYPE': 'Prenatal development or birth',
     'GO:0040007PHENOTYPE': 'Growth',
-    'HP:0025142': 'Symptom',
-    'UBERON:0002224PHENOTYPE': 'Thoracic cavity',
-    'UBERON:0000310PHENOTYPE': 'Breast',
-    'HP:0001608': 'Voice',
     'CL:0000000PHENOTYPE': 'Cellular'
 
 #### Project setup
-virtualenv venv -p /usr/bin/python3.7
-source venv/bin/activate
-pip install -r requirements.txt
+    virtualenv venv -p /usr/bin/python3.7
+    source venv/bin/activate
+    pip install -r requirements.txt
     
-#### Fetch data phenotype-go term associations from monarch solr
-venv/bin/python scripts/pheno-to-go.py -p phenotypes.txt
+##### Fetch data phenotype-go term associations from monarch solr
+    scripts/pheno-to-go.py -p phenotypes.txt
+    
+##### Shuffle output
+    shuf output.tsv > shuffled.tsv
 
+##### For prototyping limit the annotations to some small number
+    ./scripts/trim-output.sh ./phenotypes.txt ./output.tsv 600 >>trimmed.tsv

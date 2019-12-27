@@ -1,1 +1,4 @@
 requests
+numpy --only-binary=numpy
+keras --only-binary=keras
+tensorflow --only-binary=tensorflow
