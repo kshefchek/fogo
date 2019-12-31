@@ -89,11 +89,11 @@ model.add(Dropout(0.3))
 
 #model.add(Flatten())
 
-#model.add(Dense(50, activation='sigmoid'))
+#model.add(Dense(50, activation='relu'))
 #model.add(Dropout(0.3))
 
-#model.add(Dense(100, activation='relu'))
-#model.add(Dropout(0.5))
+model.add(Dense(100, activation='relu'))
+model.add(Dropout(0.5))
 
 #model.add(Dense(len(label_map.keys()), activation='sigmoid'))
 model.add(Flatten())

@@ -110,12 +110,14 @@ with open(args.phenotypes, 'r') as input_file:
             if counter != 0 and counter % 1000 == 0:
                 print("processed {} genes".format(counter))
 
+print("processed {} genes".format(counter))
 
 print(class_stats)
 print(max_profile)
 
-for gene in gene_dict:
-    output_fh.write("{}\t{}\t{}\n".format(gene, ','.join(gene_dict[gene][0]), ','.join(gene_dict[gene][1])))
+for gene, data in gene_dict.items():
+    if len(data) > 1:
+        output_fh.write("{}\t{}\t{}\n".format(gene, ','.join(data[0]), ','.join(data[1])))
 
 for go in all_go:
     go_fh.write("{}\n".format(go))
