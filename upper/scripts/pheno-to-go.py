@@ -6,12 +6,12 @@ Script for pulling phenotype to go term associations by joining
 gene to phenotype and gene to gene function associations
 
 Outputs a three column file in the format:
-HP:1    Gene:1    GO:1,GO:2,GO:3
-HP:2    Gene:1    GO:1,GO:4,GO:5
+HP:1,HP:2   Gene:1    GO:1,GO:2,GO:3
+HP:2,HP:3   Gene:2    GO:1,GO:4,GO:5
 
 Prints summary statistics:
 GO profiles per class,
-Maximum length GO profile for a class for zero paddingdownstream
+Maximum length GO profile for a class for zero padding downstream
 """
 
 import argparse
@@ -35,6 +35,8 @@ class_stats = {}
 output_fh = open(args.annotations, 'w')
 go_fh = open(args.go, 'w')
 all_go = set()
+
+gene_dict = {}
 
 # Iterate over phenotype classes and fetch GO profiles
 with open(args.phenotypes, 'r') as input_file:
@@ -61,8 +63,15 @@ with open(args.phenotypes, 'r') as input_file:
         resp = req.json()
 
         for gene_facet in resp['facet_counts']['facet_fields']['subject']:
-            counter += 1
             gene = gene_facet[0]
+            if gene in gene_dict:
+                gene_dict[gene][0].add(phenotype)
+                class_stats[phenotype] += 1
+                continue
+
+            gene_dict[gene] = [{phenotype}]
+
+            counter += 1
             go_profile = set()
             has_go = False
 
@@ -93,7 +102,8 @@ with open(args.phenotypes, 'r') as input_file:
 
             if has_go:
                 class_stats[phenotype] += 1
-                output_fh.write("{}\t{}\t{}\n".format(phenotype, gene, ','.join(go_profile)))
+                gene_dict[gene].append(go_profile)
+
                 if len(go_profile) > max_profile:
                     max_profile = len(go_profile)
 
@@ -103,6 +113,9 @@ with open(args.phenotypes, 'r') as input_file:
 
 print(class_stats)
 print(max_profile)
+
+for gene in gene_dict:
+    output_fh.write("{}\t{}\t{}\n".format(gene, ','.join(gene_dict[gene][0]), ','.join(gene_dict[gene][1])))
 
 for go in all_go:
     go_fh.write("{}\n".format(go))

@@ -1,6 +1,6 @@
 ### Classification of upper ontology terms
 
-As a first test we aim to create to a multiclass classifier of the
+As a first test we aim to create to a multilabel classifier of the
 upper ontology terms in Upheno:
 
     'UBERON:0001434PHENOTYPE': 'Skeletal system',
@@ -38,3 +38,6 @@ upper ontology terms in Upheno:
 
 ##### For prototyping limit the annotations to some small number
     ./scripts/trim-output.sh ./phenotypes.txt ./output.tsv 600 >>trimmed.tsv
+
+##### Integer encode data
+    ./scripts/int-encode.py -a ../trimmed.tsv.gz -p phenotypes.txt -g ../go-terms.txt

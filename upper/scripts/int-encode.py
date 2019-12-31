@@ -7,6 +7,7 @@ import argparse
 import logging
 import gzip
 import numpy
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,61 +18,94 @@ parser.add_argument('--annotations', '-a', type=str, required=True,
                     help="Gzipped three column annotation file from pheno-to-go.py")
 parser.add_argument('--go', '-g', type=str, required=True,
                     help="Text file containing go classes, line number will "
-                         "become it's integer encoding")
+                         "become its integer encoding")
+parser.add_argument('--phenotype', '-p', type=str, required=True,
+                    help="Text file containing phenotypes classes, line number will "
+                         "become its integer encoding")
 parser.add_argument('--max', '-m', type=int, required=False,
                     help="Length of the longest profile for zero padding",
                     default=1075)
-
+parser.add_argument('--validation', '-v', type=int, required=False,
+                    help="number of samples to use for validation, takes the from the top",
+                    default=100)
 parser.add_argument('--output', '-o', type=str, required=False,
-                    help="Location of output file, npz in batch mode, npy otherwise",
-                    default="./go-encoded.npz")
-parser.add_argument('--label', '-l', type=str, required=False,
-                    help="Location of output label file",
-                    default="./labels.txt")
+                    help="Location of output directory",
+                    default="./output/")
 
 
 args = parser.parse_args()
 
-output_labels = open(args.label, 'w')
+outpath = Path(args.output)
+outpath.mkdir(parents=True, exist_ok=True)
+
+output_labels = outpath / 'labels.npy'
+validation_labels = outpath / 'validation-labels.npy'
+output_encodings = outpath / 'go-encoded.npy'
+validation_encodings = outpath / 'validation.npy'
 
 go_terms = []
-word_matrix = []
+pheno_terms = []
+
+wordvec_labels = []
+wordvec_matrix = []
+valid_labels = []
+validation_matrix = []
 
 count = 0
-index = 0
 
 with open(args.go, 'r') as go_file:
     for line in go_file:
         go_terms.append(line.rstrip())
 
+with open(args.phenotype, 'r') as pheno_file:
+    for line in pheno_file:
+        pheno_terms.append(line.rstrip())
+
 with gzip.open(args.annotations, 'rb') as annotations:
     for line in annotations:
         line = line.decode()
         if line.startswith('#'): continue
-        phenotype, gene, functions = line.rstrip("\n").split("\t")[0:3]
+        gene, phenotypes, functions = line.rstrip("\n").split("\t")[0:3]
         go_profile = functions.split(",")
-        phenotype_profile = set()
+        phenotype_profile = phenotypes.split(",")
 
         word_vec = \
             [go_terms.index(func) for func in go_profile if func in go_terms]
 
-        word_matrix.append(numpy.array(word_vec, dtype=numpy.uint16))
+        label_vec = \
+            [pheno_terms.index(pheno) for pheno in phenotype_profile if pheno in pheno_terms]
+
+        if count <= args.validation:
+            validation_matrix.append(numpy.array(word_vec, dtype=numpy.uint16))
+            valid_labels.append(numpy.array(label_vec, dtype=numpy.uint8))
+
+        else:
+            wordvec_matrix.append(numpy.array(word_vec, dtype=numpy.uint16))
+            output_labels.append(numpy.array(label_vec, dtype=numpy.uint8))
+
         count += 1
-        index += 1
-        output_labels.write("{}\n".format(phenotype))
 
         if count % 1000 == 0:
             logger.info("Converted {} profiles to integers".format(count))
 
 
-# similar to keras.preprocessing.sequence.pad_sequences
-padded = numpy.zeros([len(word_matrix), args.max], dtype=numpy.uint16)
+numpy.save(validation_labels, valid_labels)
+numpy.save(output_labels, wordvec_labels)
 
-for index, value in enumerate(word_matrix):
+# similar to keras.preprocessing.sequence.pad_sequences
+padded = numpy.zeros([len(wordvec_matrix), args.max], dtype=numpy.uint16)
+padded_val = numpy.zeros([len(validation_matrix), args.max], dtype=numpy.uint16)
+
+for index, value in enumerate(wordvec_matrix):
     padded[index][0:len(value)] = value
 
-numpy.save(args.output, numpy.array(padded, dtype=numpy.uint16))
+for index, value in enumerate(validation_matrix):
+    padded_val[index][0:len(value)] = value
+
+numpy.save(output_encodings, numpy.array(padded, dtype=numpy.uint16))
+numpy.save(validation_encodings, numpy.array(padded_val, dtype=numpy.uint16))
 
 output_labels.close()
+validation_labels.close()
 
 logger.info("Converted {} profiles to integers".format(count))
