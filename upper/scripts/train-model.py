@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten,\
     GRU, LSTM, Conv2D, Conv1D, GlobalMaxPool1D

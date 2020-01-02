@@ -72,16 +72,15 @@ with gzip.open(args.annotations, 'rb') as annotations:
         word_vec = \
             [go_terms.index(func) for func in go_profile if func in go_terms]
 
-        label_vec = \
-            [pheno_terms.index(pheno) for pheno in phenotype_profile if pheno in pheno_terms]
+        bitset = [1 if feature in phenotype_profile else 0 for feature in pheno_terms]
 
-        if count <= args.validation:
+        if count < args.validation:
             validation_matrix.append(numpy.array(word_vec, dtype=numpy.uint16))
-            valid_labels.append(numpy.array(label_vec, dtype=numpy.uint8))
+            valid_labels.append(numpy.array(bitset, dtype=numpy.uint8))
 
         else:
             wordvec_matrix.append(numpy.array(word_vec, dtype=numpy.uint16))
-            output_labels.append(numpy.array(label_vec, dtype=numpy.uint8))
+            wordvec_labels.append(numpy.array(bitset, dtype=numpy.uint8))
 
         count += 1
 
@@ -89,8 +88,8 @@ with gzip.open(args.annotations, 'rb') as annotations:
             logger.info("Converted {} profiles to integers".format(count))
 
 
-numpy.save(validation_labels, valid_labels)
-numpy.save(output_labels, wordvec_labels)
+numpy.save(validation_labels, numpy.array(valid_labels, dtype=numpy.uint8))
+numpy.save(output_labels, numpy.array(wordvec_labels, dtype=numpy.uint8))
 
 # similar to keras.preprocessing.sequence.pad_sequences
 padded = numpy.zeros([len(wordvec_matrix), args.max], dtype=numpy.uint16)
@@ -105,7 +104,5 @@ for index, value in enumerate(validation_matrix):
 numpy.save(output_encodings, numpy.array(padded, dtype=numpy.uint16))
 numpy.save(validation_encodings, numpy.array(padded_val, dtype=numpy.uint16))
 
-output_labels.close()
-validation_labels.close()
 
 logger.info("Converted {} profiles to integers".format(count))
