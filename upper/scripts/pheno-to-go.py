@@ -64,12 +64,13 @@ with open(args.phenotypes, 'r') as input_file:
 
         for gene_facet in resp['facet_counts']['facet_fields']['subject']:
             gene = gene_facet[0]
+            pheno_count = gene_facet[1]
             if gene in gene_dict:
-                gene_dict[gene][0].add(phenotype)
+                gene_dict[gene][0][phenotype] = pheno_count
                 class_stats[phenotype] += 1
                 continue
 
-            gene_dict[gene] = [{phenotype}]
+            gene_dict[gene] = [{phenotype:pheno_count}]
 
             counter += 1
             go_profile = set()
@@ -117,7 +118,11 @@ print(max_profile)
 
 for gene, data in gene_dict.items():
     if len(data) > 1:
-        output_fh.write("{}\t{}\t{}\n".format(gene, ','.join(data[0]), ','.join(data[1])))
+        output_fh.write("{}\t{}\t{}\n".format(
+            gene,
+            ','.join([str(item) for kv in data[0].items() for item in kv]),
+            ','.join(data[1]))
+        )
 
 for go in all_go:
     go_fh.write("{}\n".format(go))

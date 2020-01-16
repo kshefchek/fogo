@@ -86,16 +86,16 @@ training_labels = numpy.load("./output/labels.npy")
 model = Sequential()
 
 # There are 24173 GO terms in our input, with the max profile length being 1075
-model.add(Embedding(24173, 300, input_length=1075))
-model.add(Dropout(0.3))
+model.add(Embedding(24173, 2000, input_length=1075))
+model.add(Dropout(0.5))
 
 #model.add(Flatten())
 
-#model.add(Dense(50, activation='relu'))
+#model.add(Dense(200, activation='relu'))
 #model.add(Dropout(0.3))
 
-model.add(Dense(100, activation='relu'))
-model.add(Dropout(0.5))
+#model.add(Dense(100, activation='relu'))
+#model.add(Dropout(0.5))
 
 #model.add(Dense(len(label_map.keys()), activation='sigmoid'))
 model.add(Flatten())
@@ -108,11 +108,11 @@ model.summary()
 
 # sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss='binary_crossentropy',
-              metrics=['accuracy'],
+              metrics=['categorical_accuracy', 'accuracy'],
               optimizer='adam')
 
-filepath="weights-improvement-{epoch:02d}-{val_accuracy:.2f}.h5"
-checkpoint = ModelCheckpoint(filepath, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
+filepath="weights-improvement-{epoch:02d}-{val_categorical_accuracy:.2f}.h5"
+checkpoint = ModelCheckpoint(filepath, monitor='val_cateogircal_accuracy', verbose=1, save_best_only=True, mode='max')
 callbacks_list = [
     #ReduceLROnPlateau(),
     checkpoint]
